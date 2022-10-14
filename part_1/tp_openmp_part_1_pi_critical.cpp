@@ -39,7 +39,7 @@ int main (int argc, char** argv)
       }
       if ( ( strcmp( argv[ i ], "-T" ) == 0 ) || ( strcmp( argv[ i ], "-nb_threads" ) == 0 ) ) {
           nb_threads = atol( argv[ ++i ] );
-          printf( "  User nb_threads is %ld\n", nb_threads );
+          printf( "  User nb_threads is %d\n", nb_threads );
       } else if ( ( strcmp( argv[ i ], "-h" ) == 0 ) || ( strcmp( argv[ i ], "-help" ) == 0 ) ) {
           printf( "  Pi Options:\n" );
           printf( "  -num_steps (-N) <int>:      Number of steps to compute Pi (by default 100000000)\n" );
