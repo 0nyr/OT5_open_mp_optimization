@@ -76,7 +76,7 @@ int main (int argc, char** argv)
     #pragma omp parallel firstprivate(num_steps)
     for (i=1; i<= num_steps; i++) {
         x = (i-0.5)*step;
-        #pragma omp critical
+        #pragma omp atomic
         sum = sum + 4.0/(1.0+x*x);
     }
     pi = step * sum;
@@ -89,7 +89,7 @@ int main (int argc, char** argv)
     
     // output to file
     string result_str = 
-        string("critical") + "," 
+        string("atomic") + "," 
         + to_string(nb_threads) + ","
         + to_string(num_steps) + ","
         + to_string(time);

@@ -72,11 +72,11 @@ int main (int argc, char** argv)
     // computation of PI below
     #pragma omp parallel private(x)
     #pragma omp parallel firstprivate(step)
-    #pragma omp parallel shared(sum)
+    #pragma omp parallel shared(sum) // must be shared with reduction (see p.47/79)
     #pragma omp parallel firstprivate(num_steps)
+    #pragma omp for reduction(+: sum)
     for (i=1; i<= num_steps; i++) {
         x = (i-0.5)*step;
-        #pragma omp critical
         sum = sum + 4.0/(1.0+x*x);
     }
     pi = step * sum;
@@ -89,7 +89,7 @@ int main (int argc, char** argv)
     
     // output to file
     string result_str = 
-        string("critical") + "," 
+        string("reduction") + "," 
         + to_string(nb_threads) + ","
         + to_string(num_steps) + ","
         + to_string(time);
