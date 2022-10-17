@@ -70,14 +70,18 @@ int main (int argc, char** argv)
     gettimeofday( &begin, NULL );
 
     // computation of PI below
-    #pragma omp parallel private(x)
-    #pragma omp parallel firstprivate(step)
-    #pragma omp parallel shared(sum)
-    #pragma omp parallel firstprivate(num_steps)
+    // read only values don't mind
+    #pragma omp parallel for private(x) shared(sum)
     for (i=1; i<= num_steps; i++) {
         x = (i-0.5)*step;
         #pragma omp atomic
         sum = sum + 4.0/(1.0+x*x);
+        // x = (i-0.5)*step;
+        // x *= x;
+        // x += 1.0;
+        // x = 4.0/x;
+        // #pragma omp atomic
+        // sum = sum + x;
     }
     pi = step * sum;
 

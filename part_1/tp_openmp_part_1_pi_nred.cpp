@@ -24,7 +24,7 @@ History: Written by Tim Mattson, 11/1999.
 
 using namespace std;
 
-static long num_steps = 100000000;
+static unsigned long num_steps = 100000000;
 int nb_threads = 1;
 double step;
 
@@ -59,23 +59,40 @@ int main (int argc, char** argv)
     // setup OMP theads
     omp_set_num_threads(nb_threads); // WARN: in lowercase !!!
       
-    int i;
-    double x, pi, sum = 0.0;
-    
+    double x, pi = 0.0;
     step = 1.0/(double) num_steps;
+    unsigned long nb_red = num_steps/nb_threads;
+    unsigned long rest = num_steps%nb_threads;
+    unsigned long nb_compute_per_red = num_steps/nb_red;
 
+    if (rest != 0)
+    {
+        nb_red++;
+    }
+    
     // Timer products.
     struct timeval begin, end;
 
     gettimeofday( &begin, NULL );
 
-    // computation of PI below
-    // must be shared with reduction (see p.47/79)
-    #pragma omp parallel private(x) shared(sum) 
+    double sum = 0.0;
+    #pragma omp parallel shared(sum)
     #pragma omp parallel for reduction(+: sum)
-    for (i=1; i<= num_steps; i++) {
-        x = (i-0.5)*step;
-        sum = sum + 4.0/(1.0+x*x);
+    for (size_t i = 1; i <= nb_red; i++)
+    {
+        double sum_red = 0.0;
+        // computation of PI below
+        // must be shared with reduction (see p.47/79)
+        #pragma omp parallel private(x) shared(sum_red)
+        #pragma omp for reduction(+: sum_red)
+        for (size_t j = i*nb_compute_per_red; j < (i+1)*nb_compute_per_red; j++)
+        {
+            if (j <= num_steps){
+                x = (j-0.5)*step;
+                sum_red = sum_red + 4.0/(1.0+x*x);
+            }
+        }
+        sum += sum_red;
     }
     pi = step * sum;
 
@@ -87,7 +104,7 @@ int main (int argc, char** argv)
     
     // output to file
     string result_str = 
-        string("reduction") + "," 
+        string("nred") + "," 
         + to_string(nb_threads) + ","
         + to_string(num_steps) + ","
         + to_string(time);
