@@ -47,33 +47,37 @@
 #include <cstring>
 #include <sys/time.h>
 #include <vector>
+#include <iostream>
 
 #include <cmath>
 
 using namespace std;
 
-void checkSizes( int &N, int &M, int &S, int &nrepeat );
+void checkSizes(long long &N, long long &M, long long &S, int &nrepeat);
 
 int main( int argc, char* argv[] )
 {
-  int N = -1;         // number of rows 2^12
-  int M = -1;         // number of columns 2^10
-  int S = -1;         // total size 2^22
-  int nrepeat = 100;  // number of repeats of the test
+  // print file name
+  cout << "File: " << __FILE__ << endl;
+
+  long long N = -1;         // number of rows 2^12
+  long long M = -1;         // number of columns 2^10
+  long long S = -1;         // total size 2^22
+  int nrepeat = 100;        // number of repeats of the test
 
   // Read command line arguments.
   for ( int i = 0; i < argc; i++ ) {
     if ( ( strcmp( argv[ i ], "-N" ) == 0 ) || ( strcmp( argv[ i ], "-Rows" ) == 0 ) ) {
       N = pow( 2, atoi( argv[ ++i ] ) );
-      printf( "  User N is %d\n", N );
+      printf( "  User N is %lld\n", N );
     }
     else if ( ( strcmp( argv[ i ], "-M" ) == 0 ) || ( strcmp( argv[ i ], "-Columns" ) == 0 ) ) {
       M = pow( 2, atof( argv[ ++i ] ) );
-      printf( "  User M is %d\n", M );
+      printf( "  User M is %lld\n", M );
     }
     else if ( ( strcmp( argv[ i ], "-S" ) == 0 ) || ( strcmp( argv[ i ], "-Size" ) == 0 ) ) {
       S = pow( 2, atof( argv[ ++i ] ) );
-      printf( "  User S is %d\n", S );
+      printf( "  User S is %lld\n", S );
     }
     else if ( strcmp( argv[ i ], "-nrepeat" ) == 0 ) {
       nrepeat = atoi( argv[ ++i ] );
@@ -109,8 +113,8 @@ int main( int argc, char* argv[] )
     // For each line i
     // Multiply the i lines with the vector x 
     // Sum the results of the previous step into a single variable
-    double result_t1;
-    double result;
+    long long result_t1;
+    long long result = 0;
     for ( int i = 0; i < N; i++ ) {
       result_t1 = 0;
       result = 0;
@@ -126,13 +130,13 @@ int main( int argc, char* argv[] )
 
     // Output result.
     if ( repeat == ( nrepeat - 1 ) ) {
-      printf( "  Computed result for %d x %d is %lf\n", N, M, result );
+      printf( "  Computed result for %lld x %lld is %lld\n", N, M, result);
     }
 
-    const double solution = (double) N * (double) M;
+    const long long solution = N*M;
 
     if ( result != solution ) {
-      printf( "  Error: result( %lf ) != solution( %lf )\n", result, solution );
+      printf( "  Error: result( %lld ) != solution( %lld )\n", result, solution);
     }
   }
 
@@ -151,7 +155,7 @@ int main( int argc, char* argv[] )
   double Gbytes = 1.0e-9 * double( sizeof(double) * ( M + M * N + N ) );
 
   // Print results (problem size, time and bandwidth in GB/s).
-  printf( "  N( %d ) M( %d ) nrepeat ( %d ) problem( %g MB ) time( %g s ) bandwidth( %g GB/s )\n",
+  printf( "  N( %lld ) M( %lld ) nrepeat ( %d ) problem( %g MB ) time( %g s ) bandwidth( %g GB/s )\n",
           N, M, nrepeat, Gbytes * 1000, time, Gbytes * nrepeat / time );
 
   delete(A);
@@ -161,7 +165,7 @@ int main( int argc, char* argv[] )
   return 0;
 }
 
-void checkSizes( int &N, int &M, int &S, int &nrepeat ) {
+void checkSizes(long long &N, long long &M, long long &S, int &nrepeat) {
   // If S is undefined and N or M is undefined, set S to 2^22 or the bigger of N and M.
   if ( S == -1 && ( N == -1 || M == -1 ) ) {
     S = pow( 2, 22 );
@@ -188,7 +192,7 @@ void checkSizes( int &N, int &M, int &S, int &nrepeat ) {
   // If N is undefined, set it.
   if ( N == -1 ) N = S / M;
 
-  printf( "  Total size S = %d N = %d M = %d\n", S, N, M );
+  printf( "  Total size S = %lld N = %lld M = %lld\n", S, N, M );
 
   // Check sizes.
   if ( ( S < 0 ) || ( N < 0 ) || ( M < 0 ) || ( nrepeat < 0 ) ) {
