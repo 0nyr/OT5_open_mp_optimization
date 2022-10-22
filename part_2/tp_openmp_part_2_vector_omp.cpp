@@ -42,7 +42,6 @@
 */
 
 #include <limits>
-#include <omp.h>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -110,20 +109,20 @@ int main( int argc, char* argv[] )
     // For each line i
     // Multiply the i lines with the vector x 
     // Sum the results of the previous step into a single variable
-    double result_temp = 0;
+    double result_t1;
+    double result;
     for ( int i = 0; i < N; i++ ) {
+      result_t1 = 0;
+      result = 0;
       for (int j = 0; j < M; j++) {
-        result_temp += (*A)[i][j]*(*x)[j];
+        result_t1 += (*A)[i][j]*(*x)[j];
+      }
+      // Multiply the result of the previous step with the i value of vector y
+      for ( int k = 0; k < N; k++ ) {
+        // Sum the results of the previous step into a single variable (result)
+        result += (*y)[k]*result_t1;
       }
     }
-    printf("boucle 1: %f",result_temp);
-    // Multiply the result of the previous step with the i value of vector y
-    // Sum the results of the previous step into a single variable (result)
-    double result = 0;
-    for ( int i = 0; i < N; i++ ) {
-      result += (*y)[i]*result_temp;
-    }
-    printf("boucle 2: %f\n",result);
 
     // Output result.
     if ( repeat == ( nrepeat - 1 ) ) {
