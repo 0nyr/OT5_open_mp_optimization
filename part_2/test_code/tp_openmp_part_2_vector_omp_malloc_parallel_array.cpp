@@ -53,15 +53,11 @@
 
 using namespace std;
 
-// global variables
-int ALIGNMENT = 512;
-
 void checkSizes(long long &N, long long &M, long long &S, int &nrepeat);
 
 int* createMemAlignedCArrayOfInt(int alignment, size_t size) {
-    void* array;
-    int mem = posix_memalign (&array, alignment, size*sizeof(int));
-    if (mem != 0)
+    void* array = malloc(size* sizeof(int));
+    if (array == nullptr)
     {
         printf("Error allocating memory");
         exit(1);
@@ -79,9 +75,8 @@ int* createMemAlignedCArrayOfInt(int alignment, size_t size, int initValue) {
 }
 
 int** createMemAlignedCMatrixOfInt(int alignment, long long M, long long N, int initValue) {
-    void* array;
-    int mem = posix_memalign (&array, alignment, N*sizeof(int*));
-    if (mem != 0)
+    void* array = malloc (N*sizeof(int*));
+    if (array == nullptr)
     {
         printf("Error allocating memory");
         exit(1);
@@ -144,9 +139,9 @@ int main( int argc, char* argv[] )
   
     // openmp simd memory aligned C-arrays
 
-    int* x = createMemAlignedCArrayOfInt(ALIGNMENT, M, 1);
-    int* y = createMemAlignedCArrayOfInt(ALIGNMENT, N, 1);
-    int** A = createMemAlignedCMatrixOfInt(ALIGNMENT, M, N, 1);
+    int* x = createMemAlignedCArrayOfInt(64, M, 1);
+    int* y = createMemAlignedCArrayOfInt(64, N, 1);
+    int** A = createMemAlignedCMatrixOfInt(64, M, N, 1);
   
 //   vector<int>* y = new vector<int>(N,1);
 //   vector<int>* x = new vector<int>(M,1);
@@ -167,12 +162,10 @@ int main( int argc, char* argv[] )
     for ( int i = 0; i < N; i++ ) {
       result_t1 = 0;
       result = 0;
-      # pragma omp parallel for simd
       for (int j = 0; j < M; j++) {
         result_t1 += A[i][j]*x[j];
       }
       // Multiply the result of the previous step with the i value of vector y
-      # pragma omp parallel for simd
       for ( int k = 0; k < N; k++ ) {
         // Sum the results of the previous step into a single variable (result)
         result += y[k]*result_t1;
