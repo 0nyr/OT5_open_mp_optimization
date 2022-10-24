@@ -40,7 +40,7 @@
 // ************************************************************************
 //@HEADER
 */
-
+#include <omp.h>
 #include <limits>
 #include <cstdio>
 #include <cstdlib>
@@ -127,14 +127,17 @@ int main( int argc, char* argv[] )
         result_t1 += (*A)[i][j]*(*x)[j];
       }
       // Multiply the result of the previous step with the i value of vector y
-      #pragma omp parallel shared(result)
-      # pragma omp parallel for reduction(+: result)
+      #pragma omp parallel shared(result_t2)
+      # pragma omp parallel for reduction(+: result_t2)
       for ( int k = 0; k < N; k++ ) {
         // Sum the results of the previous step into a single variable (result)
         result_t2 += (*y)[k]*result_t1;
       }
       // WARN: avoid shared error, keep result on SHARED var
-      result = result_t2;
+      // keep only one result (from thread 0)
+      if (omp_get_thread_num() == 0) {
+        result = result_t2;
+      }
     }
 
     // Output result.

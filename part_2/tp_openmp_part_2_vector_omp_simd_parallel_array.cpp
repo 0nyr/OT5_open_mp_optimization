@@ -40,7 +40,7 @@
 // ************************************************************************
 //@HEADER
 */
-
+#include <omp.h>
 #include <limits>
 #include <cstdio>
 #include <cstdlib>
