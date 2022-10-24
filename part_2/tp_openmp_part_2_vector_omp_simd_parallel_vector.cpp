@@ -186,7 +186,8 @@ int main( int argc, char* argv[] )
 
   gettimeofday( &begin, NULL );
 
-  #pragma omp parallel for schedule(static)
+  // WARN: perf evaluation = DON'T PARALLEL !!!
+  // #pragma omp parallel for schedule(static)
   for ( int repeat = 0; repeat < nrepeat; repeat++ ) {
     // For each line i
     // Multiply the i lines with the vector x 

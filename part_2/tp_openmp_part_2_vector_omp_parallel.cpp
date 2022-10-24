@@ -109,24 +109,32 @@ int main( int argc, char* argv[] )
 
   gettimeofday( &begin, NULL );
 
-  #pragma omp parallel for schedule(static)
+  // WARN: perf evaluation = DON'T PARALLEL !!!
+  // #pragma omp parallel for schedule(static)
   for ( int repeat = 0; repeat < nrepeat; repeat++ ) {
     // For each line i
     // Multiply the i lines with the vector x 
     // Sum the results of the previous step into a single variable
-    long long result_t1;
     long long result = 0;
+    # pragma omp parallel for firstprivate(N) shared(result)
     for ( int i = 0; i < N; i++ ) {
-      result_t1 = 0;
-      result = 0;
+      long long result_t1 = 0;
+      long long result_t2 = 0;
+      // must be shared with reduction (see p.47/79)
+      #pragma omp parallel shared(result_t1)
+      # pragma omp parallel for reduction(+: result_t1)
       for (int j = 0; j < M; j++) {
         result_t1 += (*A)[i][j]*(*x)[j];
       }
       // Multiply the result of the previous step with the i value of vector y
+      #pragma omp parallel shared(result)
+      # pragma omp parallel for reduction(+: result)
       for ( int k = 0; k < N; k++ ) {
         // Sum the results of the previous step into a single variable (result)
-        result += (*y)[k]*result_t1;
+        result_t2 += (*y)[k]*result_t1;
       }
+      // WARN: avoid shared error, keep result on SHARED var
+      result = result_t2;
     }
 
     // Output result.
@@ -137,7 +145,7 @@ int main( int argc, char* argv[] )
     const long long solution = N*M;
 
     if ( result != solution ) {
-      printf( "  Error: result( %lld ) != solution( %lld )\n", result, solution);
+      printf( "[%d]  Error: result( %lld ) != solution( %lld )\n", repeat, result, solution);
     }
   }
 
