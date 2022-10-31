@@ -11,7 +11,8 @@
 **
 **
 **  HISTORY: Written by Tim Mattson, Nov 1999.
-*            Modified and extended by Jonathan Rouzaud-Cornabas, Oct 2022
+**           Modified and extended by Jonathan Rouzaud-Cornabas, Oct 202
+** 			 Corrected (segfaults) by 0nyr, Oct 2022
 */
 
 
@@ -21,24 +22,14 @@
 #include <cstring>
 #include <sys/time.h>
 
+#include "omp.h"
+
+#include "utils.hpp"
+
 #define AVAL 3.14
 #define BVAL 5.42
 #define TOL  0.001
 
-// StackOverflow: https://stackoverflow.com/questions/26831981/should-i-check-if-malloc-was-successful
-static inline void *MallocOrDie(size_t MemSize)
-{
-    void *AllocMem = malloc(MemSize);
-    /* Some implementations return null on a 0 length alloc,
-     * we may as well allow this as it increases compatibility
-     * with very few side effects */
-    if(!AllocMem && MemSize) // If AllocMem is NULL and MemSize is not 0
-	{
-        printf("Could not allocate memory!");
-        abort();
-    }
-    return AllocMem;
-}
 
 int main(int argc, char **argv)
 {
@@ -78,19 +69,11 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	/* Initialize matrices */
-
-	for (i=0; i<Ndim; i++)
-		for (j=0; j<Pdim; j++)
-			*(A+(i*Ndim+j)) = AVAL;
-
-	for (i=0; i<Pdim; i++)
-		for (j=0; j<Mdim; j++)
-			*(B+(i*Pdim+j)) = BVAL;
-
-	for (i=0; i<Ndim; i++)
-		for (j=0; j<Mdim; j++)
-			*(C+(i*Ndim+j)) = 0.0;
+	// Initialize matrices
+	initArray(A, Ndim, Pdim, AVAL);
+	initArray(B, Pdim, Mdim, BVAL);
+	initArray(C, Ndim, Mdim, 0.0);
+	printf("Initializing matrices done.");
 
 	/* Do the matrix product */
     
@@ -99,18 +82,16 @@ int main(int argc, char **argv)
 
     gettimeofday( &begin, NULL );
     
-    for (i=0; i<Ndim; i++){
-		for (j=0; j<Mdim; j++){
+    for (i=0; i<Ndim; i++) {
+		for (j=0; j<Mdim; j++) {
 			tmp = 0.0;
-			for(k=0; k<Pdim; k++){
-				/* C(i,j) = sum(over k) A(i,k) * B(k,j) */
-				tmp += *(A+(i*Ndim+k)) *  *(B+(k*Pdim+j));
+			for(k=0; k<Pdim; k++) {
+				// C(i,j) = sum(over k) A(i,k) * B(k,j)
+				tmp += A[i*Pdim + k] * B[k*Mdim + j];
 			}
-			*(C+(i*Ndim+j)) = tmp;
+			C[i*Mdim + j] = tmp; // C(i,j) = tmp
 		}
 	}
-	/* Check the answer */
-
 
     gettimeofday( &end, NULL );
 
@@ -128,11 +109,12 @@ int main(int argc, char **argv)
  
 	printf(" N %d M %d P %d multiplication at %f mflops\n", Ndim, Mdim, Pdim, mflops);
 
+	// Check result
 	cval = Pdim * AVAL * BVAL;
 	errsq = 0.0;
-	for (i=0; i<Ndim; i++){
-		for (j=0; j<Mdim; j++){
-			err = *(C+i*Ndim+j) - cval;
+	for (i=0; i < Ndim; i++) {
+		for (j=0; j < Mdim; j++) {
+			err = C[i*Mdim+j] - cval;
 		    errsq += err * err;
 		}
 	}
