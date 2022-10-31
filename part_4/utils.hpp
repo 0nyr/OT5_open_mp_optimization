@@ -29,7 +29,7 @@ static inline void *MallocOrDie(size_t MemSize)
 
 
 /**
- * @brief Initlialize a 2D array of type T with the given value.
+ * @brief Initialize a 2D array of type T with the given value.
  * 
  * @tparam colunms
  * @tparam rows
@@ -37,7 +37,7 @@ static inline void *MallocOrDie(size_t MemSize)
  * @param initValue
  */
 template <typename T>
-void initArray(T * array, size_t rows, size_t colunms, T initValue)
+void initArray(T *& array, size_t rows, size_t colunms, T initValue)
 {
     for (size_t i = 0; i < rows; i++)
     {

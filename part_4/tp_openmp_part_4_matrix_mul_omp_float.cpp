@@ -34,8 +34,7 @@
 int main(int argc, char **argv)
 {
     int Ndim = 1000, Pdim = 1000, Mdim = 1000;   /* A[N][P], B[P][M], C[N][M] */
-	int i,j,k;
-	double *A, *B, *C, cval, tmp, err, errsq;
+	float *A, *B, *C, cval, tmp, err, errsq;
 
     // Read command line arguments.
       for ( int i = 0; i < argc; i++ ) {
@@ -59,14 +58,14 @@ int main(int argc, char **argv)
       }
       
 	// Allocate memory for the matrices.
-	A = (double *)MallocOrDie(Ndim*Pdim*sizeof(double));
-	B = (double *)MallocOrDie(Pdim*Mdim*sizeof(double));
-	C = (double *)MallocOrDie(Ndim*Mdim*sizeof(double));
+	A = (float *)MallocOrDie(Ndim*Pdim*sizeof(float));
+	B = (float *)MallocOrDie(Pdim*Mdim*sizeof(float));
+	C = (float *)MallocOrDie(Ndim*Mdim*sizeof(float));
 
 	// Initialize matrices
-	initArray(A, Ndim, Pdim, AVAL);
-	initArray(B, Pdim, Mdim, BVAL);
-	initArray(C, Ndim, Mdim, 0.0);
+	initArray(A, Ndim, Pdim, (float) AVAL);
+	initArray(B, Pdim, Mdim, (float) BVAL);
+	initArray(C, Ndim, Mdim, (float) 0.0);
 	printf("Initializing matrices done.");
 
 	/* Do the matrix product */
@@ -76,10 +75,14 @@ int main(int argc, char **argv)
 
     gettimeofday( &begin, NULL );
     
-    for (i=0; i<Ndim; i++) {
-		for (j=0; j<Mdim; j++) {
+	#pragma omp parallel for firstprivate(Ndim) firstprivate(A) firstprivate(B) firstprivate(C)
+    for (int i = 0; i<Ndim; i++) {
+		#pragma omp parallel for firstprivate(Mdim) firstprivate(Pdim) private(tmp)
+		for (int j = 0; j<Mdim; j++) {
 			tmp = 0.0;
-			for(k=0; k<Pdim; k++) {
+			#pragma omp parallel shared(tmp)
+      		#pragma omp parallel for simd reduction(+: tmp)
+			for(int k = 0; k<Pdim; k++) {
 				// C(i,j) = sum(over k) A(i,k) * B(k,j)
 				tmp += A[i*Pdim + k] * B[k*Mdim + j];
 			}
@@ -106,8 +109,8 @@ int main(int argc, char **argv)
 	// Check result
 	cval = Pdim * AVAL * BVAL;
 	errsq = 0.0;
-	for (i=0; i < Ndim; i++) {
-		for (j=0; j < Mdim; j++) {
+	for (int i = 0; i < Ndim; i++) {
+		for (int j = 0; j < Mdim; j++) {
 			err = C[i*Mdim+j] - cval;
 		    errsq += err * err;
 		}
