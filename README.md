@@ -11,3 +11,9 @@
 1. Install `conda` and `jupyter notebook`
 2. Create conda env: `conda env create --file environment.yml`
 3. Go in env with `conda activate py310omp`
+
+## TODO
+
+* [X] Part 3 C++
+* [ ] Part 4 C++
+* [ ] Part 5 C++

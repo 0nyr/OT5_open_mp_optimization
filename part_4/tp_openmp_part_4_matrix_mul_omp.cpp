@@ -25,21 +25,6 @@
 #define BVAL 5.42
 #define TOL  0.001
 
-// StackOverflow: https://stackoverflow.com/questions/26831981/should-i-check-if-malloc-was-successful
-static inline void *MallocOrDie(size_t MemSize)
-{
-    void *AllocMem = malloc(MemSize);
-    /* Some implementations return null on a 0 length alloc,
-     * we may as well allow this as it increases compatibility
-     * with very few side effects */
-    if(!AllocMem && MemSize) // If AllocMem is NULL and MemSize is not 0
-	{
-        printf("Could not allocate memory!");
-        abort();
-    }
-    return AllocMem;
-}
-
 int main(int argc, char **argv)
 {
     int Ndim = 1000, Pdim = 1000, Mdim = 1000;   /* A[N][P], B[P][M], C[N][M] */
@@ -67,16 +52,10 @@ int main(int argc, char **argv)
         }
       }
       
-	// Allocate memory for the matrices.
-	A = (double *)MallocOrDie(Ndim*Pdim*sizeof(double));
-	B = (double *)MallocOrDie(Pdim*Mdim*sizeof(double));
-	C = (double *)MallocOrDie(Ndim*Mdim*sizeof(double));
-
-	// check for successful memory allocation
-	if (A == NULL || B == NULL || C == NULL) {
-		printf("Error: Can't allocate memory for matrices. Aborting...\n");
-		exit(1);
-	}
+	
+      A = (double *)malloc(Ndim*Pdim*sizeof(double));
+      B = (double *)malloc(Pdim*Mdim*sizeof(double));
+      C = (double *)malloc(Ndim*Mdim*sizeof(double));
 
 	/* Initialize matrices */
 
@@ -115,16 +94,16 @@ int main(int argc, char **argv)
     gettimeofday( &end, NULL );
 
     // Calculate time.
-    double time = 1.0 * (end.tv_sec - begin.tv_sec) +
-        1.0e-6 * (end.tv_usec - begin.tv_usec);
+    double time = 1.0 * ( end.tv_sec - begin.tv_sec ) +
+                1.0e-6 * ( end.tv_usec - begin.tv_usec );
                 
 	printf(" N %d M %d P %d multiplication in %f seconds \n", Ndim, Mdim, Pdim, time);
 
 	double dN, dM, dP, mflops;
-	dN = (double)Ndim;
-	dM = (double)Mdim;
-	dP = (double)Pdim;
-    mflops = 2.0 * dN * dM * dP/(1000000.0* time); // correction 
+      dN = (double)Ndim;
+      dM = (double)Mdim;
+      dP = (double)Pdim;
+      mflops = 2.0 * dN * dM * dP/(1000000.0* time);
  
 	printf(" N %d M %d P %d multiplication at %f mflops\n", Ndim, Mdim, Pdim, mflops);
 
@@ -141,11 +120,6 @@ int main(int argc, char **argv)
 		printf("\n Errors in multiplication: %f",errsq);
 	else
 		printf("\n Hey, it worked");
-
-	// Free up space
-	free(A);
-	free(B);
-	free(C);
 
 	printf("\n all done \n");
 }
