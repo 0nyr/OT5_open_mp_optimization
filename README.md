@@ -14,6 +14,16 @@
 
 ## TODO
 
+C++
+
 * [X] Part 3 C++
-* [ ] Part 4 C++
+* [X] Part 4 C++
 * [ ] Part 5 C++
+
+Python
+
+* [ ] Part 1 Python
+* [ ] Part 2 Python
+* [ ] Part 3 Python
+* [ ] Part 4 Python
+* [ ] Part 5 Python

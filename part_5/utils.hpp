@@ -47,3 +47,30 @@ void initArray(T *& array, size_t rows, size_t colunms, T initValue)
         }
     }
 }
+
+
+/**
+ * @brief Initialize a 2D array of type T to be an identity matrix.
+ * 
+ * @tparam colunms
+ * @tparam rows
+ * @tparam T
+ */
+template <typename T>
+void initIdentityMatrixArray(T *& array, size_t rows, size_t colunms)
+{
+    for (size_t i = 0; i < rows; i++)
+    {
+        for (size_t j = 0; j < colunms; j++)
+        {
+            if (i == j)
+            {
+                array[i*colunms + j] = (T) 1;
+            }
+            else
+            {
+                array[i*colunms + j] = (T) 0;
+            }
+        }
+    }
+}

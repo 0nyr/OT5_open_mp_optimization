@@ -1,20 +1,5 @@
-/*
-**  PROGRAM: Matrix Multiply
-**
-**  PURPOSE: This is a simple matrix multiply program. 
-**           It will compute the product
-**
-**                C  = A * B
-**
-**           A and B are set to constant matrices so we
-**           can make a quick test of the multiplication.
-**
-**
-**  HISTORY: Written by Tim Mattson, Nov 1999.
-**           Modified and extended by Jonathan Rouzaud-Cornabas, Oct 202
-** 			 Corrected (segfaults) by 0nyr, Oct 2022
-*/
-
+// chaining matrix multiplication using OpenMP
+// NB: matrices are square identity matrices to simplify checking
 
 #include <limits>
 #include <cstdio>
@@ -26,46 +11,44 @@
 
 #include "utils.hpp"
 
-#define AVAL 3.14
-#define BVAL 5.42
 #define TOL  0.001
 
 
 int main(int argc, char **argv)
 {
-    int Ndim = 1000, Pdim = 1000, Mdim = 1000;   /* A[N][P], B[P][M], C[N][M] */
+    int dim = 1000; // nb of dimension of square matrices
+	int nb_matrices = 10; // nb of matrices to chain
 	double *A, *B, *C, cval, tmp, err, errsq;
 
     // Read command line arguments.
       for ( int i = 0; i < argc; i++ ) {
-        if ( ( strcmp( argv[ i ], "-N" ) == 0 )) {
-            Ndim = atoi( argv[ ++i ] );
-            printf( "  User N is %d\n", Ndim );
-        } else if ( ( strcmp( argv[ i ], "-M" ) == 0 )) {
-            Mdim = atoi( argv[ ++i ] );
-            printf( "  User M is %d\n", Mdim );
-        } else if ( ( strcmp( argv[ i ], "-P" ) == 0 )) {
-            Pdim = atoi( argv[ ++i ] );
-            printf( "  User P is %d\n", Pdim );
+        if ( ( strcmp( argv[ i ], "-D" ) == 0 )) {
+            dim = atoi( argv[ ++i ] );
+            printf( "  User dim is %d\n", dim );
+        } else if ( ( strcmp( argv[ i ], "-N" ) == 0 )) {
+			nb_matrices = atoi( argv[ ++i ] );
+			printf( "  User nb_matrices is %d\n", nb_matrices );
         } else if ( ( strcmp( argv[ i ], "-h" ) == 0 ) || ( strcmp( argv[ i ], "-help" ) == 0 ) ) {
-            printf( "  Matrix multiplication Options:\n" );
-            printf( "  -N <int>:              Size of the dimension N (by default 1000)\n" );
-            printf( "  -M <int>:              Size of the dimension M (by default 1000)\n" );
-            printf( "  -P <int>:              Size of the dimension P (by default 1000)\n" );
-            printf( "  -help (-h):            print this message\n\n" );
-            exit( 1 );
+			printf( "  Matrix multiplication Options:\n" );
+			printf( "  -D <int>:              Number of dimension of square matrices (by default 1000)\n" );
+			printf( "  -N <int>:              Number of matrices to chain (by default 10)\n" );
+			printf( "  -help (-h):            print this message\n\n" );
+			exit( 1 ); 
         }
-      }
+    }
+	
+	// create an array of pointers to matrices
+	double **matrices = (double **)MallocOrDie(nb_matrices*sizeof(double *));
       
 	// Allocate memory for the matrices.
-	A = (double *)MallocOrDie(Ndim*Pdim*sizeof(double));
-	B = (double *)MallocOrDie(Pdim*Mdim*sizeof(double));
-	C = (double *)MallocOrDie(Ndim*Mdim*sizeof(double));
+	for(int i = 0; i < nb_matrices; i++) {
+		matrices[i] = (double *)MallocOrDie(dim*dim*sizeof(double));
+	}
 
 	// Initialize matrices
-	initArray(A, Ndim, Pdim, AVAL);
-	initArray(B, Pdim, Mdim, BVAL);
-	initArray(C, Ndim, Mdim, 0.0);
+	for(int i = 0; i < nb_matrices; i++) {
+		initIdentityMatrixArray(matrices[i], dim, dim);
+	}
 	printf("Initializing matrices done.");
 
 	/* Do the matrix product */
