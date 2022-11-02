@@ -18,7 +18,7 @@ C++
 
 * [X] Part 3 C++
 * [X] Part 4 C++
-* [ ] Part 5 C++
+* [x] Part 5 C++
 
 Python
 
