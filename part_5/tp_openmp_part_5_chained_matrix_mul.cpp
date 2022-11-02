@@ -55,17 +55,6 @@ int main(int argc, char **argv)
 		initIdentityMatrixArray(matrices[i], dim, dim);
 	}
 	printf("Initializing matrices done.");
-
-	// printf("\n First matrix first 10x10 chunk:");
-	// for (size_t i = 0; i < 10; i++) {
-	// 	printf("\n");
-	// 	for (size_t j = 0; j < 10; j++) {
-	// 		printf(" %f", matrices[0][j*dim + i]);
-	// 	}
-	// }
-	// printf("\n");
-
-	/* Do the matrix product */
     
     // Timer products.
     struct timeval begin, end;
@@ -81,30 +70,25 @@ int main(int argc, char **argv)
 	size_t nb_reduction_loops = log2(nb_matrices);
 	for (size_t n = 0; n < nb_reduction_loops; n++) { // red level
 		// compute number of multiplication in this reduction level
-		size_t nb_mult = nb_matrices / (2*(n+1));
+		size_t nb_mult = nb_matrices / (1 << (n+1)); // 2^(n+1)
 		for(size_t m = 0; m < nb_mult; m++) {
 			// compute the index of the matrices A and B to multiply
-			size_t a = 2*m*(n+1);
 			// NOTE: 1 << n is the same as raising 2 to the power n, or 2^n
 			// StackOverflow: https://stackoverflow.com/a/30357743/10798114
+			size_t a = m*(1 << (n+1));
 			size_t b = a + (1 << n); // 2^n
 
 			// allocate memory for the result matrix
 			double * C = (double *)MallocOrDie(dim*dim*sizeof(double));
 
-			std::cout << "n=" << n << ", m=" << m << ", a=" << a << ", b=" << b << std::endl;
+			//std::cout << "n=" << n << ", m=" << m << ", a=" << a << ", b=" << b << std::endl;
 
 			// multiply matrices A and B and store the result in C
 			for (size_t i = 0; i < dim; i++) {
 				for (size_t j = 0; j < dim; j++) {
 					double tmp = 0.0;
 					for (size_t k = 0; k < dim; k++) {
-						double * A = matrices[a];
-						double * B = matrices[b];
-						double tmpA = A[i*dim + k];
-						double tmpB = B[k*dim + j];
-						tmp += tmpA * tmpB;
-						//tmp += matrices[a][i*dim + k] * matrices[b][k*dim + j];
+						tmp += matrices[a][i*dim + k] * matrices[b][k*dim + j];
 					}
 					C[i*dim + j] = tmp;
 				}
@@ -144,17 +128,17 @@ int main(int argc, char **argv)
 
 	if (errsq > TOL) {
 		printf("\n Errors in multiplication: %f", errsq);
+
+		// print the result matrix first 10x10 chunk
+		printf("\n Result matrix first 10x10 chunk:");
+		for (size_t i = 0; i < 10; i++) {
+			printf("\n");
+			for (size_t j = 0; j < 10; j++) {
+				printf(" %f", matrices[0][j*dim + i]);
+			}
+		}
 	} else {
 		printf("\n Hey, it worked");
-	}
-
-	// print the result matrix first 10x10 chunk
-	printf("\n Result matrix first 10x10 chunk:");
-	for (size_t i = 0; i < 10; i++) {
-		printf("\n");
-		for (size_t j = 0; j < 10; j++) {
-			printf(" %f", matrices[0][j*dim + i]);
-		}
 	}
 
 	// Free up space
