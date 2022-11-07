@@ -7,6 +7,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <fstream>
+#include <iostream>
+#include <string>
 #include <sys/time.h>
 
 #ifndef FS
@@ -119,6 +122,20 @@ int main(int argc, char *argv[]) {
    free (p);
 
    printf("Compute Time: %f seconds\n", time);
+
+
+   // output to file
+   std::string result_str = 
+         std::string("omp_tasks") + "," 
+         + std::to_string(N) + ","
+         + std::to_string(time);
+   std::ofstream myfile("stats.csv", std::ios::app);
+   if (myfile.is_open())
+   {
+         myfile << result_str << std::endl;
+         myfile.close();
+   }
+   else std::cerr<<"Unable to open file";
 
    return 0;
 }

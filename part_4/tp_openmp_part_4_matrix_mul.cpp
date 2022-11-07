@@ -21,7 +21,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <sys/time.h>
-
+#include <fstream>
+#include <iostream>
+#include <string>
 #include "omp.h"
 
 #include "utils.hpp"
@@ -122,6 +124,23 @@ int main(int argc, char **argv)
 	free(A);
 	free(B);
 	free(C);
+
+	// output to file
+	std::string result_str = 
+			std::string("sequential") + "," 
+			+ std::to_string(Ndim) + ","
+			+ std::to_string(Mdim) + ","
+			+ std::to_string(Pdim) + ","
+			+ std::to_string(time);
+	std::ofstream myfile("stats.csv", std::ios::app);
+	if (myfile.is_open())
+	{
+			myfile << result_str << std::endl;
+			myfile.close();
+	}
+	else std::cerr<<"Unable to open file";
+
+	return 0;
 
 	printf("\n all done \n");
 }
