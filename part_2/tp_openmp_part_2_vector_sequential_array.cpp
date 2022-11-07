@@ -40,7 +40,6 @@
 // ************************************************************************
 //@HEADER
 */
-#include <omp.h>
 #include <limits>
 #include <cstdio>
 #include <cstdlib>
@@ -48,12 +47,47 @@
 #include <sys/time.h>
 #include <vector>
 #include <iostream>
-
+#include <fstream>
 #include <cmath>
 
 using namespace std;
 
 void checkSizes(long long &N, long long &M, long long &S, int &nrepeat);
+
+int* createMemCArrayOfInt(size_t size) {
+    void* array = malloc(size* sizeof(int));
+    if (array == nullptr)
+    {
+        printf("Error allocating memory");
+        exit(1);
+    }
+    return (int*)array;
+}
+
+int* createMemCArrayOfInt(size_t size, int initValue) {
+    int* array = createMemCArrayOfInt(size);
+    for (size_t i = 0; i < size; i++)
+    {
+        array[i] = initValue;
+    }
+    return array;
+}
+
+int** createMemCMatrixOfInt(long long M, long long N, int initValue) {
+    void* array = malloc (N*sizeof(int*));
+    if (array == nullptr)
+    {
+        printf("Error allocating memory");
+        exit(1);
+    }
+    int** matrix = (int**)array;
+    for (long long i = 0; i < N; i++)
+    {
+        matrix[i] = createMemCArrayOfInt(M, initValue);
+    }
+    return matrix;
+}
+
 
 int main( int argc, char* argv[] )
 {
@@ -63,7 +97,7 @@ int main( int argc, char* argv[] )
   long long N = -1;         // number of rows 2^12
   long long M = -1;         // number of columns 2^10
   long long S = -1;         // total size 2^22
-  int nrepeat = 100;        // number of repeats of the test
+  int nrepeat = 10;        // number of repeats of the test
 
   // Read command line arguments.
   for ( int i = 0; i < argc; i++ ) {
@@ -100,9 +134,17 @@ int main( int argc, char* argv[] )
   // Initialize y vector to 1.
   // Initialize x vector to 1.
   // Initialize A matrix, you can use a 1D index if you want a flat structure (i.e. a 1D array) e.g. j*M+i is the same than [j][i]
-  vector<int>* y = new vector<int>(N,1);
-  vector<int>* x = new vector<int>(M,1);
-  vector<vector<int>>* A = new vector<vector<int>>(N, vector<int>(M,1)); // matrix N*M
+  
+  
+    // openmp simd memory aligned C-arrays
+
+    int* x = createMemCArrayOfInt(M, 1);
+    int* y = createMemCArrayOfInt(N, 1);
+    int** A = createMemCMatrixOfInt(M, N, 1);
+  
+//   vector<int>* y = new vector<int>(N,1);
+//   vector<int>* x = new vector<int>(M,1);
+//   vector<vector<int>>* A = new vector<vector<int>>(N, vector<int>(M,1)); // matrix N*M
 
   // Timer products.
   struct timeval begin, end;
@@ -116,28 +158,20 @@ int main( int argc, char* argv[] )
     // Multiply the i lines with the vector x 
     // Sum the results of the previous step into a single variable
     long long result = 0;
-    # pragma omp parallel for firstprivate(N) shared(result)
     for ( int i = 0; i < N; i++ ) {
       long long result_t1 = 0;
       long long result_t2 = 0;
       // must be shared with reduction (see p.47/79)
-      #pragma omp parallel shared(result_t1)
-      # pragma omp parallel for reduction(+: result_t1)
       for (int j = 0; j < M; j++) {
-        result_t1 += (*A)[i][j]*(*x)[j];
+        result_t1 += A[i][j]*x[j];
       }
       // Multiply the result of the previous step with the i value of vector y
-      #pragma omp parallel shared(result_t2)
-      # pragma omp parallel for reduction(+: result_t2)
       for ( int k = 0; k < N; k++ ) {
         // Sum the results of the previous step into a single variable (result)
-        result_t2 += (*y)[k]*result_t1;
+        result_t2 += y[k]*result_t1;
       }
       // WARN: avoid shared error, keep result on SHARED var
-      // keep only one result (from thread 0)
-      if (omp_get_thread_num() == 0) {
-        result = result_t2;
-      }
+      result = result_t2;
     }
 
     // Output result.
@@ -170,9 +204,25 @@ int main( int argc, char* argv[] )
   printf( "  N( %lld ) M( %lld ) nrepeat ( %d ) problem( %g MB ) time( %g s ) bandwidth( %g GB/s )\n",
           N, M, nrepeat, Gbytes * 1000, time, Gbytes * nrepeat / time );
 
-  delete(A);
-  delete(y);
-  delete(x);
+  for (int i = 0; i < N; i++) {
+    free(A[i]);
+  }
+  free(A);
+  free(y);
+  free(x);
+
+  // output to file
+  string result_str = 
+      string("sequential_array") + "," 
+      + to_string(S) + ","
+      + to_string(time);
+  ofstream myfile("stats.csv", ios::app);
+  if (myfile.is_open())
+  {
+      myfile << result_str << endl;
+      myfile.close();
+  }
+  else cerr<<"Unable to open file";
 
   return 0;
 }
@@ -217,3 +267,5 @@ void checkSizes(long long &N, long long &M, long long &S, int &nrepeat) {
     exit( 1 );
   }
 }
+
+

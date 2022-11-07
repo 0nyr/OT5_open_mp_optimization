@@ -40,7 +40,7 @@
 // ************************************************************************
 //@HEADER
 */
-#include <omp.h>
+
 #include <limits>
 #include <cstdio>
 #include <cstdlib>
@@ -48,86 +48,10 @@
 #include <sys/time.h>
 #include <vector>
 #include <iostream>
-
+#include <fstream>
 #include <cmath>
 
 using namespace std;
-
-#include <stdlib.h>
-#include <malloc.h>
-#include <immintrin.h>
-#include <memory>
-
-// StackOverflow: https://en.cppreference.com/w/c/memory/aligned_alloc 
-template <typename T, std::size_t N = 16>
-class AlignmentAllocator {
-public:
-    typedef T value_type;
-    typedef std::size_t size_type;
-    typedef std::ptrdiff_t difference_type;
-
-    typedef T * pointer;
-    typedef const T * const_pointer;
-
-    typedef T & reference;
-    typedef const T & const_reference;
-
-    public:
-    inline AlignmentAllocator () throw () { }
-
-    template <typename T2>
-    inline AlignmentAllocator (const AlignmentAllocator<T2, N> &) throw () { }
-
-    inline ~AlignmentAllocator () throw () { }
-
-    inline pointer address (reference r) {
-        return &r;
-    }
-
-    inline const_pointer address (const_reference r) const {
-        return &r;
-    }
-
-    inline pointer allocate (size_type n) {
-        return (pointer)aligned_alloc(n*sizeof(value_type), N);
-    }
-
-    inline void deallocate (pointer p, size_type) {
-        free(p);
-    }
-
-    inline void construct (pointer p, const value_type & wert) {
-        new (p) value_type (wert);
-    }
-
-    inline void destroy (pointer p) {
-        p->~value_type ();
-    }
-
-    inline size_type max_size () const throw () {
-        return size_type (-1) / sizeof (value_type);
-    }
-
-    template <typename T2>
-    struct rebind {
-        typedef AlignmentAllocator<T2, N> other;
-    };
-
-    bool operator!=(const AlignmentAllocator<T,N>& other) const  {
-        return !(*this == other);
-    }
-
-    // Returns true if and only if storage allocated from *this
-    // can be deallocated from other, and vice versa.
-    // Always returns true for stateless allocators.
-    bool operator==(const AlignmentAllocator<T,N>& other) const {
-        return true;
-    }
-};
-
-
-
-
 
 void checkSizes(long long &N, long long &M, long long &S, int &nrepeat);
 
@@ -139,7 +63,7 @@ int main( int argc, char* argv[] )
   long long N = -1;         // number of rows 2^12
   long long M = -1;         // number of columns 2^10
   long long S = -1;         // total size 2^22
-  int nrepeat = 100;        // number of repeats of the test
+  int nrepeat = 10;        // number of repeats of the test
 
   // Read command line arguments.
   for ( int i = 0; i < argc; i++ ) {
@@ -176,18 +100,15 @@ int main( int argc, char* argv[] )
   // Initialize y vector to 1.
   // Initialize x vector to 1.
   // Initialize A matrix, you can use a 1D index if you want a flat structure (i.e. a 1D array) e.g. j*M+i is the same than [j][i]
-  vector<int, AlignmentAllocator<int, 64>>* y = new vector<int, AlignmentAllocator<int, 64>>(N,1);
-  vector<int, AlignmentAllocator<int, 64>>* x = new vector<int, AlignmentAllocator<int, 64>>(M,1);
-  vector<vector<int, AlignmentAllocator<int, 64>>, AlignmentAllocator<int, 64>>* A = 
-    new vector<vector<int, AlignmentAllocator<int, 64>>, AlignmentAllocator<int, 64>>(N, vector<int, AlignmentAllocator<int, 64>>(M,1)); // matrix N*M
+  vector<int>* y = new vector<int>(N,1);
+  vector<int>* x = new vector<int>(M,1);
+  vector<vector<int>>* A = new vector<vector<int>>(N, vector<int>(M,1)); // matrix N*M
 
   // Timer products.
   struct timeval begin, end;
 
   gettimeofday( &begin, NULL );
 
-  // WARN: perf evaluation = DON'T PARALLEL !!!
-  // #pragma omp parallel for schedule(static)
   for ( int repeat = 0; repeat < nrepeat; repeat++ ) {
     // For each line i
     // Multiply the i lines with the vector x 
@@ -197,12 +118,10 @@ int main( int argc, char* argv[] )
     for ( int i = 0; i < N; i++ ) {
       result_t1 = 0;
       result = 0;
-      # pragma omp parallel for simd
       for (int j = 0; j < M; j++) {
         result_t1 += (*A)[i][j]*(*x)[j];
       }
       // Multiply the result of the previous step with the i value of vector y
-      # pragma omp parallel for simd
       for ( int k = 0; k < N; k++ ) {
         // Sum the results of the previous step into a single variable (result)
         result += (*y)[k]*result_t1;
@@ -242,6 +161,20 @@ int main( int argc, char* argv[] )
   delete(A);
   delete(y);
   delete(x);
+
+
+  // output to file
+  string result_str = 
+      string("sequential_vector") + "," 
+      + to_string(S) + ","
+      + to_string(time);
+  ofstream myfile("stats.csv", ios::app);
+  if (myfile.is_open())
+  {
+      myfile << result_str << endl;
+      myfile.close();
+  }
+  else cerr<<"Unable to open file";
 
   return 0;
 }
