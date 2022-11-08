@@ -12,18 +12,14 @@
 2. Create conda env: `conda env create --file environment.yml`
 3. Go in env with `conda activate py310omp`
 
-## TODO
+## authors
+Original subject and code base provided by Jonathan Rouzaud-Cornabas <jonathan.rouzaud-cornabas@insa-lyon.fr>
 
-C++
+Project made by :
+  + Bastien Barbe <bastien.barbe@insa-lyon.fr>
+  + Florian Rascoussier <florian.rascoussier@insa-lyon.fr>
 
-* [X] Part 3 C++
-* [X] Part 4 C++
-* [X] Part 5 C++
+## Hardware used for performance evaluation
+  + Processor: AMD® Ryzen 7 3700x 8-core processor × 16
+  + OS: Ubuntu 22.04.1 LTS, 64-bit
 
-Python
-
-* [X] Part 1 Python
-* [X] Part 2 Python
-* [ ] Part 3 Python
-* [ ] Part 4 Python
-* [ ] Part 5 Python
