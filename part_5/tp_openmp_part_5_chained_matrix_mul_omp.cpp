@@ -12,9 +12,12 @@
 
 #include "utils.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 
 #define TOL  0.001
 
+using namespace std;
 
 int main(int argc, char **argv)
 {
@@ -149,5 +152,20 @@ int main(int argc, char **argv)
 	free(matrices[0]); // last matrix is the result
 	free(matrices);
 
+	// output to file 
+	ofstream myfile("stats.csv", ios::app);
+	if (myfile.is_open())
+	{
+		myfile << "omp" << "," 
+			<< dim << ","
+			<< nb_matrices << ","
+			<< std::setprecision(std::numeric_limits<double>::digits10) << time
+			<< endl;
+		myfile.close();
+	}
+	else cerr<<"Unable to open file";
+
 	printf("\n all done \n");
+
+	return 0;
 }

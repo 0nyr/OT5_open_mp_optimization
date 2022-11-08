@@ -12,14 +12,17 @@
 
 #include "utils.hpp"
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 
 #define TOL  0.001
 
+using namespace std;
 
 int main(int argc, char **argv)
 {
     size_t dim = 100; // nb of dimension of square matrices
-	size_t nb_matrices = 8; // nb of matrices to chain
+	size_t nb_matrices = 5; // nb of matrices to chain
 
     // Read command line arguments.
       for ( int i = 0; i < argc; i++ ) {
@@ -35,8 +38,8 @@ int main(int argc, char **argv)
 			printf( "  So nb_matrices is %ld\n", nb_matrices );
         } else if ( ( strcmp( argv[ i ], "-h" ) == 0 ) || ( strcmp( argv[ i ], "-help" ) == 0 ) ) {
 			printf( "  Matrix multiplication Options:\n" );
-			printf( "  -D <int>:              Number of dimension of square matrices (by default 1000)\n" );
-			printf( "  -N <int>:              Number of matrices to chain (by default 10). Should be even.\n" );
+			printf( "  -D <int>:              Number of dimension of square matrices (by default 100)\n" );
+			printf( "  -N <int>:              Number of matrices to chain (by default 5). Should be even.\n" );
 			printf( "  -help (-h):            print this message\n\n" );
 			exit( 1 );
         }
@@ -145,5 +148,20 @@ int main(int argc, char **argv)
 	free(matrices[0]); // last matrix is the result
 	free(matrices);
 
+	// output to file 
+	ofstream myfile("stats.csv", ios::app);
+	if (myfile.is_open())
+	{
+		myfile << "sequential" << "," 
+			<< dim << ","
+			<< nb_matrices << ","
+			<< std::setprecision(std::numeric_limits<double>::digits10) << time
+			<< endl;
+		myfile.close();
+	}
+	else cerr<<"Unable to open file";
+
 	printf("\n all done \n");
+
+	return 0;
 }
