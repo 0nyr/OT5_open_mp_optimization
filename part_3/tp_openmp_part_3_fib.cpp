@@ -10,6 +10,7 @@
 #include <sys/time.h>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <string>
 
 static int N = 5;
@@ -17,6 +18,8 @@ static int N = 5;
 #ifndef FS
 #define FS 38
 #endif
+
+using namespace std;
 
 struct node {
    int data;
@@ -118,19 +121,19 @@ int main(int argc, char *argv[]) {
    printf("Compute Time: %f seconds\n", time);
 
 
-   // output to file
-   std::string result_str = 
-         std::string("sequential") + "," 
-         + std::to_string(N) + ","
-         + std::to_string(time);
-   std::ofstream myfile("stats.csv", std::ios::app);
+   // output to file 
+   ofstream myfile("stats.csv", ios::app);
    if (myfile.is_open())
    {
-         myfile << result_str << std::endl;
+         myfile << "sequential" << "," 
+         << N << ","
+         << std::setprecision(std::numeric_limits<double>::digits10) << time
+         << endl;
          myfile.close();
    }
-   else std::cerr<<"Unable to open file";
+   else cerr<<"Unable to open file";
 
    return 0;
+
 }
 

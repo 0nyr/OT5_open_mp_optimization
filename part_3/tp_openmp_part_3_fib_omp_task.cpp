@@ -10,11 +10,15 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <iomanip>
+#include "omp.h"
 #include <sys/time.h>
 
 #ifndef FS
 #define FS 38
 #endif
+
+using namespace std;
 
 struct node {
    int data;
@@ -124,18 +128,19 @@ int main(int argc, char *argv[]) {
    printf("Compute Time: %f seconds\n", time);
 
 
-   // output to file
-   std::string result_str = 
-         std::string("omp_tasks") + "," 
-         + std::to_string(N) + ","
-         + std::to_string(time);
-   std::ofstream myfile("stats.csv", std::ios::app);
-   if (myfile.is_open())
-   {
-         myfile << result_str << std::endl;
-         myfile.close();
-   }
-   else std::cerr<<"Unable to open file";
+   // output to file 
+  ofstream myfile("stats.csv", ios::app);
+  if (myfile.is_open())
+  {
+      myfile << "omp_tasks" << "," 
+        << N << ","
+        << std::setprecision(std::numeric_limits<double>::digits10) << time
+        << endl;
+      myfile.close();
+  }
+  else cerr<<"Unable to open file";
+
+  return 0;
 
    return 0;
 }

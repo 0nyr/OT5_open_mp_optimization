@@ -49,6 +49,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
+#include <iomanip>
 #include <cmath>
 
 using namespace std;
@@ -163,15 +164,14 @@ int main( int argc, char* argv[] )
   delete(x);
 
 
-  // output to file
-  string result_str = 
-      string("sequential_vector") + "," 
-      + to_string(S) + ","
-      + to_string(time);
+  // output to file 
   ofstream myfile("stats.csv", ios::app);
   if (myfile.is_open())
   {
-      myfile << result_str << endl;
+      myfile << "sequential_vector" << "," 
+        << S << ","
+        << std::setprecision(std::numeric_limits<double>::digits10) << time
+        << endl;
       myfile.close();
   }
   else cerr<<"Unable to open file";
